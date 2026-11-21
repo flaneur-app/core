@@ -18,6 +18,10 @@ pub enum AuthMethod {
     },
     /// Email (or user name) and password.
     Password,
+    /// A sign-in link sent by email: [`Connector::send_sign_in_link`](crate::Connector::send_sign_in_link),
+    /// then [`Connector::poll_sign_in_link`](crate::Connector::poll_sign_in_link) until the user
+    /// opened it in any browser.
+    EmailLink,
     /// OAuth 2.0 with PKCE, through the system browser.
     OAuth {
         /// Authorization endpoint.
@@ -53,6 +57,24 @@ impl fmt::Debug for Credentials {
             Self::OAuthCode { .. } => "OAuthCode",
         };
         write!(f, "Credentials::{kind}(<redacted>)")
+    }
+}
+
+/// A sign-in link sent and not opened yet.
+#[derive(Clone)]
+pub struct PendingSignIn {
+    /// Opaque state the connector needs to poll; never logged.
+    pub state: String,
+    /// What to tell the user ("Open the link we sent to a…@example.org").
+    pub message: Option<String>,
+}
+
+impl fmt::Debug for PendingSignIn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PendingSignIn")
+            .field("state", &"<redacted>")
+            .field("message", &self.message)
+            .finish()
     }
 }
 

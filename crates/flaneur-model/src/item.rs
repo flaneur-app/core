@@ -42,6 +42,8 @@ pub struct Item {
     pub channel: Option<ChannelSummary>,
     /// Thumbnails, any order; pick with [`Thumbnail::best_for_width`].
     pub thumbnails: Vec<Thumbnail>,
+    /// Frame size of the video, when known: tells portrait videos apart for the UI.
+    pub dimensions: Option<Dimensions>,
     /// View count, or current viewers for a live.
     pub views: Option<u64>,
     /// Public reaction counts.
@@ -52,6 +54,23 @@ pub struct Item {
     pub web_url: Option<Url>,
     /// Where the signed-in user stands with this item, when the service or the local history knows.
     pub watch: Option<WatchState>,
+}
+
+/// Width and height of a video frame, in pixels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Dimensions {
+    /// Width.
+    pub width: u32,
+    /// Height.
+    pub height: u32,
+}
+
+impl Dimensions {
+    /// Taller than wide.
+    #[must_use]
+    pub fn is_portrait(self) -> bool {
+        self.height > self.width
+    }
 }
 
 /// One thumbnail image.
@@ -127,10 +146,22 @@ pub struct Progress {
 pub struct WatchState {
     /// Where playback stopped; `None` when only "watched" is known.
     pub progress: Option<Progress>,
-    /// The item counts as watched.
-    pub watched: bool,
+    /// The item counts as watched; `None` when the service does not say.
+    pub watched: Option<bool>,
     /// The user's reaction, when the service tells it.
     pub reaction: Option<Reaction>,
+}
+
+/// What a playlist is for. Lets the UI find the built-in lists without matching titles.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum PlaylistKind {
+    /// A playlist a user made.
+    #[default]
+    Regular,
+    /// The account's "watch later" list.
+    WatchLater,
+    /// The account's liked items.
+    Liked,
 }
 
 /// A playlist, as listings show it.
@@ -138,6 +169,8 @@ pub struct WatchState {
 pub struct Playlist {
     /// Where the playlist lives.
     pub r#ref: PlaylistRef,
+    /// Built-in list or user playlist.
+    pub kind: PlaylistKind,
     /// Title.
     pub title: String,
     /// Owner, when it is a channel.

@@ -60,7 +60,8 @@ pub struct SearchFilters {
     pub kind: Option<flaneur_model::ItemKind>,
     /// Only items published after this time.
     pub published_after: Option<flaneur_model::Timestamp>,
-    /// Exclude items flagged sensitive.
+    /// Exclude items flagged sensitive. Best effort: services without such a filter ignore it,
+    /// and the view-models drop items whose `flags.sensitive` is `Some(true)` afterwards.
     pub safe: Option<bool>,
 }
 
@@ -91,8 +92,6 @@ pub enum ChannelTab {
     Shorts,
     /// Lives, past and upcoming.
     Lives,
-    /// The channel's playlists, as items of a page of their own (see [`Channels::playlists`]).
-    Playlists,
 }
 
 /// Channel pages.
@@ -162,7 +161,12 @@ pub trait Library: Send + Sync {
         None
     }
 
-    /// One page of a playlist.
+    /// The liked items, as a playlist, when the service has one.
+    fn liked(&self) -> Option<PlaylistRef> {
+        None
+    }
+
+    /// One page of a playlist: the account's own, or any public one (`public_playlists`).
     async fn playlist_items(
         &self,
         playlist: &PlaylistRef,
@@ -222,6 +226,6 @@ pub trait Comments: Send + Sync {
         cursor: Option<&Cursor>,
     ) -> Result<Page<Comment>>;
 
-    /// Posts a comment, or a reply when `reply_to` is the id of a comment.
+    /// Posts a comment, or a reply when `reply_to` is the `reply_token` of a comment.
     async fn post(&self, item: &ItemRef, text: &str, reply_to: Option<&str>) -> Result<Comment>;
 }
