@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    uses: flaneur-app/.github/.github/workflows/rust-ci.yml@main
+    with:
+      system-packages: "libsqlite3-dev"

@@ -1,0 +1,7 @@
+/target
+*.swp
+.DS_Store
+# Credentials used for local testing: never commit them.
+cookies.txt
+*.cookies
+.env
