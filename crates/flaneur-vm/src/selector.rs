@@ -11,7 +11,8 @@ use flaneur_model::{Playable, Stream, StreamKind, VideoCodec};
 /// What the user and the machine prefer.
 #[derive(Debug, Clone)]
 pub struct SelectionPrefs {
-    /// Highest video height to pick (for instance 1080).
+    /// Highest quality to pick, as the "p" of "1080p": the short side of the frame, so a
+    /// portrait 1080×1920 video counts as 1080, like a landscape 1920×1080 one.
     pub max_height: u32,
     /// Codecs with hardware decoding on this machine, any order.
     pub hardware_codecs: Vec<VideoCodec>,
@@ -64,7 +65,7 @@ pub fn select_streams<'a>(playable: &'a Playable, prefs: &SelectionPrefs) -> Opt
     let video = playable
         .streams
         .iter()
-        .filter(|s| s.kind == StreamKind::Video && height(s) <= prefs.max_height)
+        .filter(|s| s.kind == StreamKind::Video && quality(s) <= prefs.max_height)
         .max_by_key(|s| video_rank(s, prefs));
     if let (Some(video), Some(audio)) = (video, audio) {
         return Some(Selection::Split { video, audio });
@@ -73,7 +74,7 @@ pub fn select_streams<'a>(playable: &'a Playable, prefs: &SelectionPrefs) -> Opt
     let muxed = playable
         .streams
         .iter()
-        .filter(|s| s.kind == StreamKind::Muxed && height(s) <= prefs.max_height)
+        .filter(|s| s.kind == StreamKind::Muxed && quality(s) <= prefs.max_height)
         .max_by_key(|s| video_rank(s, prefs));
     if let Some(muxed) = muxed {
         return Some(Selection::Single(muxed));
@@ -82,8 +83,12 @@ pub fn select_streams<'a>(playable: &'a Playable, prefs: &SelectionPrefs) -> Opt
     playable.hls_manifest.as_ref().map(Selection::Hls)
 }
 
-fn height(stream: &Stream) -> u32 {
-    stream.height.unwrap_or(0)
+/// The short side of the frame (the "p" of "1080p"), or the height when the width is unknown.
+fn quality(stream: &Stream) -> u32 {
+    match (stream.width, stream.height) {
+        (Some(w), Some(h)) => w.min(h),
+        (_, h) => h.unwrap_or(0),
+    }
 }
 
 /// Higher is better: hardware decoding first, then resolution, then codec order, then fps and
@@ -96,7 +101,7 @@ fn video_rank(stream: &Stream, prefs: &SelectionPrefs) -> (bool, u32, usize, u16
         .map_or(0, |pos| prefs.codec_order.len() - pos);
     (
         hardware,
-        height(stream),
+        quality(stream),
         codec_score,
         stream.fps.unwrap_or(0),
         stream.bitrate.unwrap_or(0),
@@ -258,6 +263,20 @@ mod tests {
             (video.height, video.video_codec.clone()),
             (Some(1080), Some(VideoCodec::Vp9))
         );
+    }
+
+    #[test]
+    fn caps_portrait_videos_by_their_short_side() {
+        let mut portrait = stream(StreamKind::Video, Some(1920), Some(VideoCodec::H264), 1);
+        portrait.width = Some(1080);
+        let mut too_big = stream(StreamKind::Video, Some(3840), Some(VideoCodec::H264), 2);
+        too_big.width = Some(2160);
+        let p = playable(vec![portrait, too_big, audio("en", true, 128_000)]);
+        let Some(Selection::Split { video, .. }) = select_streams(&p, &SelectionPrefs::default())
+        else {
+            panic!("expected split streams");
+        };
+        assert_eq!(video.height, Some(1920));
     }
 
     #[test]
