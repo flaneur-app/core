@@ -6,7 +6,18 @@ This repository inherits the [canonical workspace rules](https://github.com/flan
 
 The shared Rust core of [Flâneur](https://github.com/flaneur-app): the normalized model, the connector traits, the view-models and the local storage that every native app uses.
 
-**Status:** bootstrapping: the crate layout and the connector traits are being designed.
+**Status:** bootstrapping. Read [docs/architecture.md](docs/architecture.md) before any structural change.
+
+## Structure
+
+```text
+crates/
+  flaneur-model/       pure data types (serde only); "absent is not false", fixed units
+  flaneur-connector/   Connector trait, optional facets, Capabilities/Support, Session, Error
+  flaneur-store/       SQLite: history, local subscriptions, settings, outbox (migrations/)
+  flaneur-vm/          view-models: Paginator, PlayQueue, select_streams, interleave, Registry
+docs/architecture.md   the contract between core, connectors and apps
+```
 
 ## License
 
