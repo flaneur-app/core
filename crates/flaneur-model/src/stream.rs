@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::{Item, Seconds, Timestamp};
+use crate::{Item, ItemRef, Seconds, Timestamp};
 
 /// Everything needed to play one item: the streams the service offers and their expiry.
 ///
@@ -26,6 +26,12 @@ pub struct Playable {
     /// Opaque state the connector needs to report playback back to the service (for YouTube,
     /// the playback tracking URLs of the player response). Handed back in playback reports.
     pub tracking: Option<String>,
+    /// HTTP headers the player must send with every stream and manifest request.
+    pub headers: Vec<(String, String)>,
+    /// The item is only playable on another service (a page that embeds a video hosted
+    /// elsewhere): the view-model resolves this item with that service's connector instead, and
+    /// `streams` is empty.
+    pub handoff: Option<ItemRef>,
 }
 
 /// One stream of an item.
@@ -53,6 +59,8 @@ pub struct Stream {
     pub hdr: Option<bool>,
     /// Audio track details.
     pub audio: Option<AudioTrack>,
+    /// The service's own name of this variant ("HD", "avc1 720p"), for the quality menu.
+    pub label: Option<String>,
 }
 
 /// What a stream carries.

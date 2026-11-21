@@ -40,7 +40,7 @@ impl Registry {
 
     /// The connector that recognizes a URL, for shared links.
     #[must_use]
-    pub fn resolve_url(&self, url: &url::Url) -> Option<(ServiceId, flaneur_connector::Target)> {
+    pub fn resolve_url(&self, url: &str) -> Option<(ServiceId, flaneur_connector::Target)> {
         self.iter()
             .find_map(|c| c.parse_url(url).map(|t| (c.info().id.clone(), t)))
     }

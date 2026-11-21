@@ -152,6 +152,7 @@ mod tests {
             video_codec: codec,
             hdr: None,
             audio: None,
+            label: None,
         }
     }
 
@@ -181,6 +182,7 @@ mod tests {
                 scheduled_start: None,
                 channel: None,
                 thumbnails: vec![],
+                dimensions: None,
                 views: None,
                 reactions: ReactionCounts::default(),
                 flags: ContentFlags::default(),
@@ -193,6 +195,8 @@ mod tests {
             expires_at: None,
             start_at: None,
             tracking: None,
+            headers: Vec::new(),
+            handoff: None,
         }
     }
 

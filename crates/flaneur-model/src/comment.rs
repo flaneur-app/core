@@ -21,6 +21,8 @@ pub struct Comment {
     pub reply_count: Option<u64>,
     /// Opaque token the connector needs to list the replies.
     pub replies_token: Option<String>,
+    /// Opaque token the connector needs to post a reply; `None` when replying is not possible.
+    pub reply_token: Option<String>,
     /// Pinned by the item's publisher.
     pub pinned: bool,
     /// Liked by the item's publisher.

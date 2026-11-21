@@ -67,17 +67,26 @@ Key types:
   services, feed metadata or page resolvers.
 - `WatchState` and `Progress`: the user's own state for an item (resume position, watched,
   reaction).
-- `Playable`: streams, HLS/DASH manifests, expiry, start position, and an opaque `tracking`
-  token the connector needs to report playback (YouTube's playback tracking URLs). Resolved right
-  before playback, never stored: stream URLs expire and can be tied to the IP that resolved them.
+- `Playable`: streams (each with an optional service label such as "HD"), HLS/DASH manifests,
+  expiry, start position, request headers the player must send, an opaque `tracking` token the
+  connector needs to report playback (YouTube's playback tracking URLs), and an optional `handoff`
+  to an item of another service (a feed page that only embeds a video hosted elsewhere). Resolved
+  right before playback, never stored: stream URLs expire and can be tied to the IP that resolved
+  them.
+- `Dimensions` on items tell portrait videos apart; `PlaylistKind` marks the built-in lists
+  (watch later, liked) so nothing matches on localized titles.
+- `Comment` carries two opaque tokens: `replies_token` to list replies, `reply_token` to post one.
 
 ## Connectors (`flaneur-connector`)
 
 A connector is one value implementing `Connector`:
 
 - **Required:** `info()` (id, name, sign-in methods), `capabilities()`, `sign_in` / `restore` /
-  `sign_out`, `parse_url` (shared links), and `player()` (stream resolution and related items):
-  every connector plays what it lists.
+  `sign_out`, `parse_url` (shared links, raw text, no network; ids may be short forms, the resolved
+  item carries the canonical one), and `player()` (stream resolution and related items): every
+  connector plays what it lists.
+- **Optional on the connector:** `send_sign_in_link` / `poll_sign_in_link` for email-link sign-in,
+  and `discover` (with network: the feeds or channel a web page offers).
 - **Optional facets**, `None` by default: `feeds()` (home, subscription feed, trending, shorts),
   `search()`, `channels()`, `library()` (history read and playback reporting, playlists, watch
   later), `subscriptions()`, `reactions()`, `comments()`.
@@ -88,7 +97,7 @@ as a `Support`:
 | `Support` | Meaning | Example |
 | --- | --- | --- |
 | `Unsupported` | The service cannot do it | dislikes on RSS |
-| `Local` | Flâneur does it alone, in its database; the service never knows | RSS subscriptions and history |
+| `Local` | Flâneur does it alone, in its database; the service never knows. The connector does not implement it: the view-models do, with the store | RSS subscriptions, history and subscription feed (merged by date from each followed feed's items) |
 | `Anonymous` | Works without an account | YouTube search |
 | `SignedIn` | Needs a session, and then syncs with the account | YouTube history, likes |
 

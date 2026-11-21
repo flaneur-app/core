@@ -22,8 +22,8 @@ pub use channel::{Channel, ChannelSummary};
 pub use comment::{Comment, CommentAuthor};
 pub use ids::{ChannelRef, ItemRef, PlaylistRef, ServiceId};
 pub use item::{
-    ContentFlags, Item, ItemKind, Playlist, Progress, Reaction, ReactionCounts, Thumbnail,
-    WatchState,
+    ContentFlags, Dimensions, Item, ItemKind, Playlist, PlaylistKind, Progress, Reaction,
+    ReactionCounts, Thumbnail, WatchState,
 };
 pub use page::{Cursor, Page};
 pub use stream::{AudioTrack, Container, Playable, Stream, StreamKind, VideoCodec};

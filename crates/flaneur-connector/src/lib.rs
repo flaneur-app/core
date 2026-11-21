@@ -17,7 +17,7 @@ mod capabilities;
 mod error;
 mod facets;
 
-pub use auth::{Account, AuthMethod, Credentials, Session};
+pub use auth::{Account, AuthMethod, Credentials, PendingSignIn, Session};
 pub use capabilities::{Capabilities, Support};
 pub use error::{Error, Result};
 pub use facets::{
@@ -27,7 +27,6 @@ pub use facets::{
 
 use async_trait::async_trait;
 use flaneur_model::{ChannelRef, ItemRef, PlaylistRef, ServiceId};
-use url::Url;
 
 /// Static description of a connector.
 #[derive(Debug, Clone)]
@@ -66,11 +65,34 @@ pub trait Connector: Send + Sync {
     /// Restores a session kept from an earlier [`Connector::sign_in`].
     async fn restore(&self, session: &Session) -> Result<()>;
 
-    /// Forgets the session. Does not revoke anything on the service.
-    fn sign_out(&self);
+    /// Sends a sign-in link by email ([`AuthMethod::EmailLink`]).
+    async fn send_sign_in_link(&self, email: &str) -> Result<PendingSignIn> {
+        let _ = email;
+        Err(Error::Unsupported)
+    }
 
-    /// Recognizes a URL of this service (shared links, `open with`).
-    fn parse_url(&self, url: &Url) -> Option<Target>;
+    /// Checks whether the user opened the link: `Ok(None)` while waiting, then the session.
+    async fn poll_sign_in_link(&self, pending: &PendingSignIn) -> Result<Option<Session>> {
+        let _ = pending;
+        Err(Error::Unsupported)
+    }
+
+    /// Forgets the session. Does not revoke anything on the service.
+    async fn sign_out(&self);
+
+    /// Recognizes a link of this service (shared links, `open with`), without network access.
+    ///
+    /// Takes the raw text, not a parsed URL: some schemes (`lbry://@channel`) do not survive URL
+    /// parsing. The ids it returns may be short forms; the item that [`Player::resolve`] returns
+    /// carries the canonical reference.
+    fn parse_url(&self, url: &str) -> Option<Target>;
+
+    /// What a web page offers, with network access: the feeds an unknown site advertises, the
+    /// channel behind a page. Empty when the page has nothing for this connector.
+    async fn discover(&self, url: &str) -> Result<Vec<Target>> {
+        let _ = url;
+        Ok(Vec::new())
+    }
 
     /// Stream resolution and related items: every connector can play what it lists.
     fn player(&self) -> &dyn Player;

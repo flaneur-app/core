@@ -62,6 +62,7 @@ mod tests {
             scheduled_start: None,
             channel: None,
             thumbnails: vec![],
+            dimensions: None,
             views: None,
             reactions: ReactionCounts::default(),
             flags: ContentFlags::default(),
