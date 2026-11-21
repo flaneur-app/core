@@ -1,0 +1,22 @@
+[package]
+name = "flaneur-vm"
+description = "Platform-independent view-models of Flâneur: screens state, pagination, play queue, stream selection."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+flaneur-model.workspace = true
+flaneur-connector.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+
+[lints]
+workspace = true
